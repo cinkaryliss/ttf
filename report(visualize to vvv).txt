@@ -1,0 +1,77 @@
+--------------------------------------------------------------------------------
+Processing file 'visualize.py'
+ outputting to 'vvv.py'
+--------------------------------------------------------------------------------
+
+'visualize.py' Line 80
+--------------------------------------------------------------------------------
+
+Added keyword 'logits' to reordered function 'tf.nn.softmax_cross_entropy_with_logits'
+Added keyword 'labels' to reordered function 'tf.nn.softmax_cross_entropy_with_logits'
+
+    Old: 	cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y_))
+                                                                                              
+    New: 	cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
+                                                                                 ~~~~~~~        ~~~~~~~     
+
+'visualize.py' Line 88
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.scalar_summary' to 'tf.summary.scalar'
+
+    Old: 	tf.scalar_summary("cross entropy", cross_entropy)
+          ~~~~~~~~~~~~~~~~~                                 
+    New: 	tf.summary.scalar("cross entropy", cross_entropy)
+          ~~~~~~~~~~~~~~~~~                                 
+
+'visualize.py' Line 89
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.scalar_summary' to 'tf.summary.scalar'
+
+    Old: 	tf.scalar_summary("accuracy", accuracy)
+          ~~~~~~~~~~~~~~~~~                       
+    New: 	tf.summary.scalar("accuracy", accuracy)
+          ~~~~~~~~~~~~~~~~~                       
+
+'visualize.py' Line 92
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.merge_all_summaries' to 'tf.summary.merge_all'
+
+    Old: 	merged = tf.merge_all_summaries()
+                   ~~~~~~~~~~~~~~~~~~~~~~   
+    New: 	merged = tf.summary.merge_all()
+                   ~~~~~~~~~~~~~~~~~~~~   
+
+'visualize.py' Line 29
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.histogram_summary' to 'tf.summary.histogram'
+
+    Old: 			tf.histogram_summary("%s/%s"%(parent, i[0]), i[1])
+            ~~~~~~~~~~~~~~~~~~~~                               
+    New: 			tf.summary.histogram("%s/%s"%(parent, i[0]), i[1])
+            ~~~~~~~~~~~~~~~~~~~~                               
+
+'visualize.py' Line 93
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.train.SummaryWriter' to 'tf.summary.FileWriter'
+
+    Old: 	writer = tf.train.SummaryWriter("/home/uesaka/TensorFlow/log", sess.graph_def)
+                   ~~~~~~~~~~~~~~~~~~~~~~                                                
+    New: 	writer = tf.summary.FileWriter("/home/uesaka/TensorFlow/log", sess.graph_def)
+                   ~~~~~~~~~~~~~~~~~~~~~                                                
+
+'visualize.py' Line 77
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.histogram_summary' to 'tf.summary.histogram'
+
+    Old: 	tf.histogram_summary("y", y_conv)
+          ~~~~~~~~~~~~~~~~~~~~              
+    New: 	tf.summary.histogram("y", y_conv)
+          ~~~~~~~~~~~~~~~~~~~~              
+
+
