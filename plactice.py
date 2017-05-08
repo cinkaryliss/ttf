@@ -25,7 +25,7 @@ def load_data(nb_classes=10):
     y_test = np_utils.to_categorical(y_test, nb_classes)
 
     return x_train, y_train, x_test, y_test
-
+    
 def mk_model():
     model = Sequential() #モデルの初期化
     model.add(Dense(512, input_dim=784)) #入力ー784次元、出力ー512次元
