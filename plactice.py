@@ -11,6 +11,7 @@ from tensorflow.contrib.keras.python.keras import backend as K
 def load_data(nb_classes=10):
     #the data, shuffled and split between train and test sets
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    #この時点でx_train.shape=(60000,28,28), x_test.shape=(10000,28,28), y_train.shape=(60000,), y_test.shape=(10000,)
     x_train = x_train.reshape(60000, 784).astype('float32')
     x_test = x_test.reshape(10000, 784).astype('float32')
     #normalization(0〜255の値から0〜1に変換)
@@ -27,7 +28,7 @@ def load_data(nb_classes=10):
 
 def mk_model():
     model = Sequential() #モデルの初期化
-    model.add(Dense(512, input_dim=784)) #入力ー７８４次元、出力ー５１２次元
+    model.add(Dense(512, input_dim=784)) #入力ー784次元、出力ー512次元
     model.add(Activation('relu'))
     model.add(Dropout(0.2))
     model.add(Dense(512))
@@ -55,11 +56,12 @@ if __name__=='__main__':
     model.fit(x_train, y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test))
 
     #モデルの評価
-    score = model.evaluate(x_test, y_test, verbose=0)
-    print('\nTest score : {:>.4f}'.format(score[0])) #loss
+    print('Evaluate')
+    score = model.evaluate(x_test, y_test, verbose=1)
+    print('\n\nTest score : {:>.4f}'.format(score[0])) #loss
     print('Test accuracy : {:>.4f}'.format(score[1]))
 
     elapsed_time = time.time() - start
-    print('Time : {:>.4f}'.format(elapsed_time) + '[sec]')
+    print('Time : {:>.4f} [sec]'.format(elapsed_time))
 
-    K.clear_session()
+    K.clear_session() #バックエンド(TensorFlow)が使用していたリソースを解放
