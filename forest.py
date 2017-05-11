@@ -1,7 +1,5 @@
 import numpy as np
-import time
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
+import time, sys
 
 from tensorflow.contrib.keras.python.keras.datasets import mnist
 from tensorflow.contrib.keras.python.keras.models import Sequential
@@ -60,30 +58,16 @@ def mk_model():
 
     return model
 
-def visualize_filters(model):
-    W1 = model.layers[0].get_weights()[0] #(5,5,1,32)
-
-    plt.figure()
-    for i in range(W1[3]):
-        im = [0,i]
-
-        scaler = MinMaxScaler(feature_range=(0,255))
-        im = scaler.fit_transform(im)
-
-        plt.subplot(4,8,i+1)
-        plt.axis('off')
-        plt.imshow(im, cmap='gray')
-    plt.show()
-
 if __name__=='__main__':
     start = time.time()
-    np.random.seed(1337) #for reproducibility
+    np.random.seed(1337) #再現性のため(毎回同じ乱数が出る)
     batch_size = 100
     nb_epoch = 2
 
     x_train, y_train, x_test, y_test = load_data()
     model = mk_model()
     model.summary() #check model configuration
+    print(model.layers[1])
     vis_utils.plot_model(model, to_file='network.png', show_shapes=True, show_layer_names=True)
     #plot(model, to_file='model.png', show_shapes=True, show_layers_name=True)
 
