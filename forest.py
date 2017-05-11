@@ -1,5 +1,7 @@
 import numpy as np
-import time, sys
+import time, os, cv2, sys
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 
 from tensorflow.contrib.keras.python.keras.datasets import mnist
 from tensorflow.contrib.keras.python.keras.models import Sequential
@@ -7,6 +9,32 @@ from tensorflow.contrib.keras.python.keras.layers import Dense, Flatten, Dropout
 from tensorflow.contrib.keras.python.keras.optimizers import Adam
 from tensorflow.contrib.keras.python.keras.utils import np_utils, vis_utils
 from tensorflow.contrib.keras.python.keras import backend as K
+
+def load_self_data(num_classes=6, img_size=56):
+    train_img_dirs = ['hard-kenzen', 'soft-kenzen', 'hard-koshi', 'soft-koshi', 'kaoku', 'ground']
+    train_image = []
+    train_label = []
+
+    for i d in enumerate(train_img_dirs):
+        files = os.listdir('/home/uesaka/python_gui/' + d) #/home/uesaka/python_gui/ + d 以下のディレクトリのファイル名を取得
+        for f in files:
+            # 画像読み込み
+            img = cv2.imread('./data/' + d + '/' + f)
+            # 1辺がimg_sizeの正方形にリサイズ
+            img = cv2.resize(img, (img_size, img_size))
+            img = img.astype('float32')/255.0
+            train_image.append(img)
+
+            # one_hot_vectorを作りラベルとして追加
+            tmp = np.zeros(num_classes)
+            tmp[i] = 1
+            train_label.append(tmp)
+
+    #numpy配列に変換
+    train_image = np.asarray(train_image)
+    train_label = np.asarray(train_label)
+
+    return x_train, y_train, x_test, y_test
 
 def load_data(nb_classes=10):
     #the data, shuffled and split between train and test sets
@@ -58,16 +86,49 @@ def mk_model():
 
     return model
 
+def visualize_filters(model, title):
+    W1 = model.layers[0].get_weights()[0] #(5,5,1,32)
+    W1 = W1.transpose(3,2,0,1) #(32,1,5,5)
+
+    W2 = model.layers[3].get_weights()[0] #(5,5,32,64)
+    W2 = W2.transpose(3,2,0,1) #(64,32,5,5)
+
+    scaler = MinMaxScaler(feature_range=(0,255)) #正規化用のフィルタ x_i_new = ((x_i-x_min)/(x_max-x_min))*255
+
+    plt.figure()
+    plt.suptitle('W1 '+title)
+    for i in range(W1.shape[0]):
+        im = W1[i,0]
+        im = scaler.fit_transform(im) #normalization
+
+        plt.subplot(4,8,i+1)
+        plt.axis('off')
+        plt.imshow(im, cmap='gray')
+    plt.show()
+
+    plt.figure()
+    plt.suptitle('W2-1 '+title)
+    for i in range(W2.shape[0]):
+        im = W2[i,0]
+        im = scaler.fit_transform(im) #normalization
+
+        plt.subplot(8,8,i+1)
+        plt.axis('off')
+        plt.imshow(im, cmap='gray')
+    plt.show()
+
 if __name__=='__main__':
     start = time.time()
-    np.random.seed(1337) #再現性のため(毎回同じ乱数が出る)
+    np.random.seed(1337) #for reproducibility
     batch_size = 100
     nb_epoch = 2
 
-    x_train, y_train, x_test, y_test = load_data()
+    x_train, y_train, x_test, y_test = load_self_data()
     model = mk_model()
     model.summary() #check model configuration
-    print(model.layers[1])
+
+    visualize_filters(model, 'before')
+
     vis_utils.plot_model(model, to_file='network.png', show_shapes=True, show_layer_names=True)
     #plot(model, to_file='model.png', show_shapes=True, show_layers_name=True)
 
@@ -76,6 +137,8 @@ if __name__=='__main__':
 
     #モデルの学習
     model.fit(x_train, y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test))
+
+    visualize_filters(model, 'after')
 
     #モデルの評価
     print('Evaluate')
