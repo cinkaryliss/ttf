@@ -1,5 +1,5 @@
 import numpy as np
-import time
+import time, sys
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
@@ -60,17 +60,33 @@ def mk_model():
 
     return model
 
-def visualize_filters(model):
+def visualize_filters(model, title):
     W1 = model.layers[0].get_weights()[0] #(5,5,1,32)
+    W1 = W1.transpose(3,2,0,1) #(32,1,5,5)
+
+    W2 = model.layers[3].get_weights()[0] #(5,5,32,64)
+    W2 = W2.transpose(3,2,0,1) #(64,32,5,5)
+
+    scaler = MinMaxScaler(feature_range=(0,255)) #正規化用のフィルタ x_i_new = ((x_i-x_min)/(x_max-x_min))*255
 
     plt.figure()
-    for i in range(W1[3]):
-        im = [0,i]
-
-        scaler = MinMaxScaler(feature_range=(0,255))
-        im = scaler.fit_transform(im)
+    plt.suptitle('W1 '+title)
+    for i in range(W1.shape[0]):
+        im = W1[i,0]
+        im = scaler.fit_transform(im) #normalization
 
         plt.subplot(4,8,i+1)
+        plt.axis('off')
+        plt.imshow(im, cmap='gray')
+    plt.show()
+
+    plt.figure()
+    plt.suptitle('W2-1 '+title)
+    for i in range(W2.shape[0]):
+        im = W2[i,0]
+        im = scaler.fit_transform(im) #normalization
+
+        plt.subplot(8,8,i+1)
         plt.axis('off')
         plt.imshow(im, cmap='gray')
     plt.show()
@@ -79,11 +95,14 @@ if __name__=='__main__':
     start = time.time()
     np.random.seed(1337) #for reproducibility
     batch_size = 100
-    nb_epoch = 2
+    nb_epoch = 20
 
     x_train, y_train, x_test, y_test = load_data()
     model = mk_model()
     model.summary() #check model configuration
+
+    visualize_filters(model, 'before')
+
     vis_utils.plot_model(model, to_file='network.png', show_shapes=True, show_layer_names=True)
     #plot(model, to_file='model.png', show_shapes=True, show_layers_name=True)
 
@@ -92,6 +111,8 @@ if __name__=='__main__':
 
     #モデルの学習
     model.fit(x_train, y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test))
+
+    visualize_filters(model, 'after')
 
     #モデルの評価
     print('Evaluate')
