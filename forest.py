@@ -10,30 +10,79 @@ from tensorflow.contrib.keras.python.keras.optimizers import Adam
 from tensorflow.contrib.keras.python.keras.utils import np_utils, vis_utils
 from tensorflow.contrib.keras.python.keras import backend as K
 
-def load_self_data(num_classes=5, img_size=56):
-    train_img_dirs = ['hard-kenzen', 'hard-koshi', 'soft-kenzen', 'kaoku', 'ground'] #soft-koshiはデータが少なすぎるのでスルー
+def load_self_data(num_classes=6, img_size=28):
+    train_img_dirs = ['hard-kenzen', 'hard-koshi', 'soft-kenzen', 'kaoku', 'ground']
     train_image = []
     train_label = []
+    test_image = []
+    test_label = []
 
     for (i,d) in enumerate(train_img_dirs):
-        files = os.listdir(os.getcwd + d) #現在のディレクトリ + d 以下のディレクトリのファイル名を取得
-        for f in files:
-            # 画像読み込み
-            img = cv2.imread('./data/' + d + '/' + f)
-            img = cv2.resize(img, (img_size, img_size)) # 1辺がimg_sizeの正方形にリサイズ
-            img = img.astype('float32')/255.0 #normalization
-            train_image.append(img)
+        #path以下のファイル名を取得
+        path = os.getcwd() + '/data/' + d
+        files = []
+        for x in os.listdir(path):
+            if not os.path.isdir(path + x):
+                files.append(x)
 
-            # one_hot_vectorを作りラベルとして追加
-            tmp = np.zeros(num_classes)
-            tmp[i] = 1
-            train_label.append(tmp)
+        total = len(files)
+        thresh = round((total-1)*0.8) #8:2の割合でトレーニングデータとテストデータに分離
+        print('総数:{0} 境界:{1}'.format(total, thresh))
+
+        k = 0
+        flag = False
+
+        for f in files:
+            if f == 'number.txt' or f == '.DS_Store': #number.txtと.DS_Storeはスルー
+                pass
+
+            elif not flag: #トレーニングデータ
+                # 画像読み込み
+                img = cv2.imread(os.getcwd() + '/data/' + d + '/' + f)
+                img = cv2.resize(img, (img_size,img_size), interpolation = cv2.INTER_LINEAR) # 1辺がimg_sizeの正方形にリサイズ
+                img = img.astype('float32')/255.0 #normalization
+                train_image.append(img)
+
+                # one_hot_vectorを作りラベルとして追加
+                tmp = np.zeros(num_classes)
+                tmp[i] = 1
+                train_label.append(tmp)
+
+                k += 1;
+                if k == thresh:
+                    flag = True
+
+            else: #テストデータ
+                # 画像読み込み
+                img = cv2.imread(os.getcwd() + '/data/' + d + '/' + f)
+                img = cv2.resize(img, (img_size,img_size), interpolation = cv2.INTER_LINEAR) # 1辺がimg_sizeの正方形にリサイズ
+                img = img.astype('float32')/255.0 #normalization
+                test_image.append(img)
+
+                # one_hot_vectorを作りラベルとして追加
+                tmp = np.zeros(num_classes)
+                tmp[i] = 1
+                test_label.append(tmp)
+
+    print(len(train_image))
+    print(len(train_label))
+    print(len(test_image))
+    print(len(test_label))
 
     #numpy配列に変換
     train_image = np.asarray(train_image)
     train_label = np.asarray(train_label)
+    test_image = np.asarray(test_image)
+    test_label = np.asarray(test_label)
 
-    return x_train, y_train, x_test, y_test
+    print(train_image.shape)
+    print(train_label.shape)
+    print(test_image.shape)
+    print(test_label.shape)
+
+    #shapeを変更する！！！！
+
+    return train_image, train_label, test_image, test_label
 
 def load_mnist(nb_classes=10): #MNIST(テスト用)
     #the data, shuffled and split between train and test sets
@@ -126,9 +175,11 @@ if __name__=='__main__':
     batch_size = 100
     nb_epoch = 1
 
-    x_train, y_train, x_test, y_test = load_mnist()
+    x_train, y_train, x_test, y_test = load_self_data()
     model = mk_model('lenet-5')
     model.summary() #check model configuration
+
+    sys.exit()
 
     #visualize_filters(model, 'before') #重みの可視化
 
