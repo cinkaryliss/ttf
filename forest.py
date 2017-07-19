@@ -10,19 +10,18 @@ from tensorflow.contrib.keras.python.keras.optimizers import Adam
 from tensorflow.contrib.keras.python.keras.utils import np_utils, vis_utils
 from tensorflow.contrib.keras.python.keras import backend as K
 
-def load_self_data(num_classes=6, img_size=56):
-    train_img_dirs = ['hard-kenzen', 'soft-kenzen', 'hard-koshi', 'soft-koshi', 'kaoku', 'ground']
+def load_self_data(num_classes=5, img_size=56):
+    train_img_dirs = ['hard-kenzen', 'hard-koshi', 'soft-kenzen', 'kaoku', 'ground'] #soft-koshiはデータが少なすぎるのでスルー
     train_image = []
     train_label = []
 
-    for i d in enumerate(train_img_dirs):
-        files = os.listdir('/home/uesaka/python_gui/' + d) #/home/uesaka/python_gui/ + d 以下のディレクトリのファイル名を取得
+    for (i,d) in enumerate(train_img_dirs):
+        files = os.listdir(os.getcwd + d) #現在のディレクトリ + d 以下のディレクトリのファイル名を取得
         for f in files:
             # 画像読み込み
             img = cv2.imread('./data/' + d + '/' + f)
-            # 1辺がimg_sizeの正方形にリサイズ
-            img = cv2.resize(img, (img_size, img_size))
-            img = img.astype('float32')/255.0
+            img = cv2.resize(img, (img_size, img_size)) # 1辺がimg_sizeの正方形にリサイズ
+            img = img.astype('float32')/255.0 #normalization
             train_image.append(img)
 
             # one_hot_vectorを作りラベルとして追加
@@ -36,7 +35,7 @@ def load_self_data(num_classes=6, img_size=56):
 
     return x_train, y_train, x_test, y_test
 
-def load_data(nb_classes=10):
+def load_mnist(nb_classes=10): #MNIST(テスト用)
     #the data, shuffled and split between train and test sets
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     #この時点でx_train.shape=(60000,28,28), x_test.shape=(10000,28,28), y_train.shape=(60000,), y_test.shape=(10000,)
@@ -54,37 +53,41 @@ def load_data(nb_classes=10):
 
     return x_train, y_train, x_test, y_test
 
-def mk_model():
-    model = Sequential() #モデルの初期化
+def mk_model(arch):
+    if arch == 'lenet-5':
+        model = Sequential() #モデルの初期化
 
-    #畳み込み第１層
-    model.add(Conv2D(32, 5, padding='same', input_shape=(28,28,1))) #output_shape=(None(60000),28,28,32)
-    #filters=32, kernel_size=(5,5), strides(1,1), use_bias=True
-    #dilidation_rate(膨張率)=(1,1), kernel_initializer='glorot_uniform', bias_initializer='zeros'
-    #padding='sane'は出力のshapeが入力と同じになるように調整
-    #output_shape=(None(60000),28,28,32)
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(padding='same')) #output_shape=(None,14,14,32)
-    #pool_size=(2,2), strides(2,2)
+        #畳み込み第１層
+        model.add(Conv2D(32, 5, padding='same', input_shape=(28,28,1))) #output_shape=(None(60000),28,28,32)
+        #filters=32, kernel_size=(5,5), strides(1,1), use_bias=True
+        #dilidation_rate(膨張率)=(1,1), kernel_initializer='glorot_uniform', bias_initializer='zeros'
+        #padding='sane'は出力のshapeが入力と同じになるように調整
+        #output_shape=(None(60000),28,28,32)
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(padding='same')) #output_shape=(None,14,14,32)
+        #pool_size=(2,2), strides(2,2)
 
-    #畳み込み第２層
-    model.add(Conv2D(64, 5, padding='same')) #output_shape=(None,14,14,64)
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(padding='same')) #output_shape=(None,7,7,64)
+        #畳み込み第２層
+        model.add(Conv2D(64, 5, padding='same')) #output_shape=(None,14,14,64)
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(padding='same')) #output_shape=(None,7,7,64)
 
-    #平坦化
-    model.add(Flatten()) #output_shape=(None,3136(7*7*64))
+        #平坦化
+        model.add(Flatten()) #output_shape=(None,3136(7*7*64))
 
-    #全結合第１層
-    model.add(Dense(1024)) #output_shape=(None,1024)
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5)) #無視する割合を記述(例えば、0.2と記述した場合、80%の結合が残る)
+        #全結合第１層
+        model.add(Dense(1024)) #output_shape=(None,1024)
+        model.add(Activation('relu'))
+        model.add(Dropout(0.5)) #無視する割合を記述(例えば、0.2と記述した場合、80%の結合が残る)
 
-    #全結合第２層
-    model.add(Dense(10)) #output_shape=(None,10)
-    model.add(Activation('softmax'))
+        #全結合第２層
+        model.add(Dense(10)) #output_shape=(None,10)
+        model.add(Activation('softmax'))
 
-    return model
+        return model
+
+    elif arch == 'alexnet':
+        model = Sequential() #モデルの初期化
 
 def visualize_filters(model, title):
     W1 = model.layers[0].get_weights()[0] #(5,5,1,32)
@@ -121,14 +124,15 @@ if __name__=='__main__':
     start = time.time()
     np.random.seed(1337) #for reproducibility
     batch_size = 100
-    nb_epoch = 2
+    nb_epoch = 1
 
-    x_train, y_train, x_test, y_test = load_self_data()
-    model = mk_model()
+    x_train, y_train, x_test, y_test = load_mnist()
+    model = mk_model('lenet-5')
     model.summary() #check model configuration
 
-    visualize_filters(model, 'before')
+    #visualize_filters(model, 'before') #重みの可視化
 
+    #作成したモデルのアーキテクチャをnetwork.pngに出力
     vis_utils.plot_model(model, to_file='network.png', show_shapes=True, show_layer_names=True)
     #plot(model, to_file='model.png', show_shapes=True, show_layers_name=True)
 
@@ -138,7 +142,7 @@ if __name__=='__main__':
     #モデルの学習
     model.fit(x_train, y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test))
 
-    visualize_filters(model, 'after')
+    #visualize_filters(model, 'after') #重みの可視化
 
     #モデルの評価
     print('Evaluate')

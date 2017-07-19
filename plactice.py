@@ -95,7 +95,7 @@ if __name__=='__main__':
     start = time.time()
     np.random.seed(1337) #for reproducibility
     batch_size = 100
-    nb_epoch = 20
+    nb_epoch = 2
 
     x_train, y_train, x_test, y_test = load_data()
     model = mk_model()
