@@ -1,0 +1,9 @@
+classes		:	5
+img size	:	28x28
+batch size	:	50
+epochs		:	1
+architecture	:	lenet-5
+optimizer	:	Adam
+Test loss	:	0.8315
+Test accuracy	:	0.6216
+Process time	:	29.5095
